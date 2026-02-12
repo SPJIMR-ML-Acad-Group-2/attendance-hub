@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 260 20% 97%;
+    --foreground: 260 25% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 260 25% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 260 25% 10%;
+
+    --primary: 270 60% 36%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 260 15% 92%;
+    --secondary-foreground: 260 20% 20%;
+
+    --muted: 260 12% 94%;
+    --muted-foreground: 260 10% 44%;
+
+    --accent: 24 90% 52%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 260 12% 88%;
+    --input: 260 12% 88%;
+    --ring: 270 60% 36%;
+
+    --radius: 0.625rem;
+
+    --sidebar-background: 270 40% 14%;
+    --sidebar-foreground: 260 10% 92%;
+    --sidebar-primary: 24 90% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 270 35% 20%;
+    --sidebar-accent-foreground: 260 10% 92%;
+    --sidebar-border: 270 30% 22%;
+    --sidebar-ring: 24 90% 52%;
+
+    --status-good: 152 60% 42%;
+    --status-good-foreground: 0 0% 100%;
+    --status-warning: 38 92% 50%;
+    --status-warning-foreground: 0 0% 10%;
+    --status-danger: 0 72% 51%;
+    --status-danger-foreground: 0 0% 100%;
+
+    --chart-1: 270 60% 36%;
+    --chart-2: 24 90% 52%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 200 60% 50%;
+    --chart-5: 0 72% 51%;
+  }
+
+  .dark {
+    --background: 270 20% 6%;
+    --foreground: 260 10% 92%;
+
+    --card: 270 20% 10%;
+    --card-foreground: 260 10% 92%;
+
+    --popover: 270 20% 10%;
+    --popover-foreground: 260 10% 92%;
+
+    --primary: 270 55% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 270 15% 16%;
+    --secondary-foreground: 260 10% 85%;
+
+    --muted: 270 15% 14%;
+    --muted-foreground: 260 10% 55%;
+
+    --accent: 24 85% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 270 15% 16%;
+    --input: 270 15% 16%;
+    --ring: 270 55% 50%;
+
+    --sidebar-background: 270 25% 5%;
+    --sidebar-foreground: 260 10% 80%;
+    --sidebar-primary: 24 85% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 270 20% 12%;
+    --sidebar-accent-foreground: 260 10% 85%;
+    --sidebar-border: 270 20% 12%;
+    --sidebar-ring: 24 85% 55%;
+
+    --status-good: 152 55% 48%;
+    --status-good-foreground: 0 0% 100%;
+    --status-warning: 38 88% 55%;
+    --status-warning-foreground: 0 0% 10%;
+    --status-danger: 0 68% 55%;
+    --status-danger-foreground: 0 0% 100%;
+
+    --chart-1: 270 55% 50%;
+    --chart-2: 24 85% 55%;
+    --chart-3: 38 88% 55%;
+    --chart-4: 200 55% 55%;
+    --chart-5: 0 68% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+}
+
+@layer utilities {
+  .attendance-good {
+    @apply bg-[hsl(var(--status-good))] text-[hsl(var(--status-good-foreground))];
+  }
+  .attendance-warning {
+    @apply bg-[hsl(var(--status-warning))] text-[hsl(var(--status-warning-foreground))];
+  }
+  .attendance-danger {
+    @apply bg-[hsl(var(--status-danger))] text-[hsl(var(--status-danger-foreground))];
+  }
+  .text-good {
+    @apply text-[hsl(var(--status-good))];
+  }
+  .text-warning {
+    @apply text-[hsl(var(--status-warning))];
+  }
+  .text-danger {
+    @apply text-[hsl(var(--status-danger))];
+  }
+}

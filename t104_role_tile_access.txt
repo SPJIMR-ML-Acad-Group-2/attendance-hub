@@ -1,0 +1,368 @@
+t104_role_tile_access 
+
+-- t104: Role -> Tile Access (complete script with triggers)
+
+create extension if not exists pgcrypto;
+
+create table if not exists public.t104_role_tile_access (
+  id uuid primary key default gen_random_uuid(),
+  role_code public.t101_application_roles not null references public.t101_application_roles(role_code) on delete cascade,
+  tile_id uuid not null references public.t102_dashboard_tiles(id) on delete cascade,
+
+  -- denormalized readable fields
+  tile_key text not null,
+  tile_label text not null,
+
+  can_view boolean not null default true,
+  all_subtiles boolean not null default false,
+  created_at timestamptz not null default now(),
+  last_updated_at timestamptz not null default now(),
+
+  unique (role_code, tile_id)
+);
+
+create index if not exists idx_t104_role_code on public.t104_role_tile_access(role_code);
+create index if not exists idx_t104_tile_id on public.t104_role_tile_access(tile_id);
+create index if not exists idx_t104_tile_key on public.t104_role_tile_access(tile_key);
+create index if not exists idx_t104_can_view on public.t104_role_tile_access(can_view);
+
+-- Trigger fn 1: always set last_updated_at
+create or replace function public.fn_t104_set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.last_updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_t104_set_updated_at on public.t104_role_tile_access;
+create trigger trg_t104_set_updated_at
+before update on public.t104_role_tile_access
+for each row
+execute function public.fn_t104_set_updated_at();
+
+-- Trigger fn 2: auto-fill tile_key/tile_label from tile_id on insert/update
+create or replace function public.fn_t104_fill_tile_readables()
+returns trigger
+language plpgsql
+as $$
+begin
+  select t.tile_key, t.tile_label
+  into new.tile_key, new.tile_label
+  from public.t102_dashboard_tiles t
+  where t.id = new.tile_id;
+
+  if new.tile_key is null or new.tile_label is null then
+    raise exception 'Invalid tile_id % for t104_role_tile_access', new.tile_id;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_t104_fill_tile_readables on public.t104_role_tile_access;
+create trigger trg_t104_fill_tile_readables
+before insert or update of tile_id
+on public.t104_role_tile_access
+for each row
+execute function public.fn_t104_fill_tile_readables();
+
+-- Trigger fn 3: propagate t102 tile key/label changes into t104 rows
+create or replace function public.fn_t102_propagate_to_t104()
+returns trigger
+language plpgsql
+as $$
+begin
+  update public.t104_role_tile_access
+  set tile_key = new.tile_key,
+      tile_label = new.tile_label,
+      last_updated_at = now()
+  where tile_id = new.id;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_t102_propagate_to_t104 on public.t102_dashboard_tiles;
+create trigger trg_t102_propagate_to_t104
+after update of tile_key, tile_label
+on public.t102_dashboard_tiles
+for each row
+execute function public.fn_t102_propagate_to_t104();
+
+-- Seed / upsert access matrix
+insert into public.t104_role_tile_access
+  (role_code, tile_id, tile_key, tile_label, can_view, all_subtiles)
+select
+  v.role_code::public.t101_application_roles,
+  t.id,
+  t.tile_key,
+  t.tile_label,
+  true,
+  v.all_subtiles
+from public.t102_dashboard_tiles t
+join (
+  values
+    ('user',           'request_access', true),
+    ('student',        'request_access', true),
+    ('faculty',        'request_access', true),
+    ('ta',             'request_access', true),
+
+    ('program_office', 'onboard_batch',  true),
+    ('program_office', 'manage_courses', true),
+    ('program_office', 'attendance_hub', false),
+
+    ('exam_office',    'attendance_hub', false),
+    ('sodoxo_office',  'attendance_hub', false),
+
+    ('developer',      'request_access', true),
+    ('developer',      'onboard_batch',  true),
+    ('developer',      'manage_courses', true),
+    ('developer',      'attendance_hub', true),
+    ('developer',      'system_settings', true)
+) as v(role_code, tile_key, all_subtiles)
+  on t.tile_key = v.tile_key
+on conflict (role_code, tile_id) do update
+set can_view = excluded.can_view,
+    all_subtiles = excluded.all_subtiles,
+    tile_key = excluded.tile_key,
+    tile_label = excluded.tile_label,
+    last_updated_at = now();
+
+-- Verify
+select role_code, tile_key, tile_label, can_view, all_subtiles, created_at, last_updated_at
+from public.t104_role_tile_access
+order by role_code, tile_key;
+
+t105_role_subtile_access
+
+-- t105: Role -> Subtile Access
+-- Grants specific subtile access per role (used when t104.all_subtiles = false)
+
+create extension if not exists pgcrypto;
+
+create table if not exists public.t105_role_subtile_access (
+  id uuid primary key default gen_random_uuid(),
+
+  role_code public.t101_application_roles not null
+    references public.t101_application_roles(role_code) on delete cascade,
+
+  subtile_id uuid not null
+    references public.t103_dashboard_subtiles(id) on delete cascade,
+
+  -- denormalized readable fields for easier viewing
+  subtile_key text not null,
+  subtile_label text not null,
+  tile_id uuid not null,
+  tile_key text not null,
+  tile_label text not null,
+
+  can_view boolean not null default true,
+  created_at timestamptz not null default now(),
+  last_updated_at timestamptz not null default now(),
+
+  unique (role_code, subtile_id)
+);
+
+create index if not exists idx_t105_role_code on public.t105_role_subtile_access(role_code);
+create index if not exists idx_t105_subtile_id on public.t105_role_subtile_access(subtile_id);
+create index if not exists idx_t105_tile_id on public.t105_role_subtile_access(tile_id);
+create index if not exists idx_t105_can_view on public.t105_role_subtile_access(can_view);
+
+-- Trigger fn 1: keep last_updated_at fresh
+create or replace function public.fn_t105_set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.last_updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_t105_set_updated_at on public.t105_role_subtile_access;
+create trigger trg_t105_set_updated_at
+before update on public.t105_role_subtile_access
+for each row
+execute function public.fn_t105_set_updated_at();
+
+-- Trigger fn 2: auto-fill readable fields from subtile/tile masters
+create or replace function public.fn_t105_fill_readables()
+returns trigger
+language plpgsql
+as $$
+begin
+  select
+    s.subtile_key,
+    s.subtile_label,
+    t.id,
+    t.tile_key,
+    t.tile_label
+  into
+    new.subtile_key,
+    new.subtile_label,
+    new.tile_id,
+    new.tile_key,
+    new.tile_label
+  from public.t103_dashboard_subtiles s
+  join public.t102_dashboard_tiles t on t.id = s.tile_id
+  where s.id = new.subtile_id;
+
+  if new.subtile_key is null or new.tile_key is null then
+    raise exception 'Invalid subtile_id % for t105_role_subtile_access', new.subtile_id;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_t105_fill_readables on public.t105_role_subtile_access;
+create trigger trg_t105_fill_readables
+before insert or update of subtile_id
+on public.t105_role_subtile_access
+for each row
+execute function public.fn_t105_fill_readables();
+
+-- Trigger fn 3: propagate subtile label/key changes into t105
+create or replace function public.fn_t103_propagate_to_t105()
+returns trigger
+language plpgsql
+as $$
+begin
+  update public.t105_role_subtile_access x
+  set subtile_key = new.subtile_key,
+      subtile_label = new.subtile_label,
+      tile_id = new.tile_id,
+      last_updated_at = now()
+  where x.subtile_id = new.id;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_t103_propagate_to_t105 on public.t103_dashboard_subtiles;
+create trigger trg_t103_propagate_to_t105
+after update of subtile_key, subtile_label, tile_id
+on public.t103_dashboard_subtiles
+for each row
+execute function public.fn_t103_propagate_to_t105();
+
+-- Trigger fn 4: propagate tile label/key changes into t105
+create or replace function public.fn_t102_propagate_to_t105()
+returns trigger
+language plpgsql
+as $$
+begin
+  update public.t105_role_subtile_access x
+  set tile_key = new.tile_key,
+      tile_label = new.tile_label,
+      last_updated_at = now()
+  where x.tile_id = new.id;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_t102_propagate_to_t105 on public.t102_dashboard_tiles;
+create trigger trg_t102_propagate_to_t105
+after update of tile_key, tile_label
+on public.t102_dashboard_tiles
+for each row
+execute function public.fn_t102_propagate_to_t105();
+
+-- t106: User Profile
+-- Single source of truth for user details + role + onboarding/access status
+
+create extension if not exists pgcrypto;
+create extension if not exists citext;
+
+create table if not exists public.t106_user_profile (
+  id uuid primary key default gen_random_uuid(),
+
+  -- null allowed for pre-imported users before first login
+  user_id uuid unique references auth.users(id) on delete set null,
+
+  email citext not null unique,
+  full_name text not null default '',
+
+  primary_role public.t101_application_roles not null
+    references public.t101_application_roles(role_code),
+
+  requested_role public.t101_application_roles null
+    references public.t101_application_roles(role_code),
+
+  access_status text not null default 'approved'
+    check (access_status in ('pending', 'approved', 'rejected')),
+
+  request_payload jsonb,                         -- form data when user requests access
+  imported_by_program_office boolean not null default false,
+
+  last_login_at timestamptz,
+  created_at timestamptz not null default now(),
+  last_updated_at timestamptz not null default now(),
+
+  -- optional domain guard (remove/modify if needed)
+  constraint chk_t106_email_domain
+    check (email::text ~* '^[^@]+@spjimr\.org$')
+);
+
+create index if not exists idx_t106_primary_role on public.t106_user_profile(primary_role);
+create index if not exists idx_t106_access_status on public.t106_user_profile(access_status);
+create index if not exists idx_t106_last_login_at on public.t106_user_profile(last_login_at desc);
+
+-- keep last_updated_at fresh
+create or replace function public.fn_t106_set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.last_updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_t106_set_updated_at on public.t106_user_profile;
+create trigger trg_t106_set_updated_at
+before update on public.t106_user_profile
+for each row
+execute function public.fn_t106_set_updated_at();
+
+
+-- t107: User Logs (audit trail)
+-- Captures who called which API and when
+
+create extension if not exists pgcrypto;
+create extension if not exists citext;
+
+create table if not exists public.t107_user_logs (
+  id bigserial primary key,
+
+  user_id uuid null references auth.users(id) on delete set null,
+  email citext,
+
+  api_path text not null,            -- e.g. /api/auth/me
+  http_method text not null,         -- GET/POST/PUT/DELETE
+  status_code int,
+  ip inet,
+  user_agent text,
+
+  request_id uuid not null default gen_random_uuid(),
+  meta jsonb,                        -- optional payload for extra audit context
+
+  called_at timestamptz not null default now()
+);
+
+create index if not exists idx_t107_user_time
+  on public.t107_user_logs(user_id, called_at desc);
+
+create index if not exists idx_t107_email_time
+  on public.t107_user_logs(email, called_at desc);
+
+create index if not exists idx_t107_api_time
+  on public.t107_user_logs(api_path, called_at desc);
+
+create index if not exists idx_t107_request_id
+  on public.t107_user_logs(request_id);
+
+create index if not exists idx_t107_status_code
+  on public.t107_user_logs(status_code);
+
