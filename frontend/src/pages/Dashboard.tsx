@@ -10,11 +10,13 @@ import {
   BookOpen,
   BarChart3,
   Settings,
+  ShieldCheck,
   Clock,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
-type AppRole = "DEVELOPER" | "PROGRAM_OFFICE" | "USER" | "STUDENT" | "FACULTY" | "TA" | "EXAM_OFFICE" | "SODOXO_OFFICE";
+type AppRole = "DEVELOPER" | "PROGRAM_OFFICE" | "USER" | "STUDENT" | "FACULTY" | "TA" | "EXAM_OFFICE" | "SODOXO_OFFICE" | string;
 
 interface Tile {
   title: string;
@@ -51,11 +53,46 @@ const tiles: Tile[] = [
     icon: Settings,
     roles: ["DEVELOPER"],
   },
+  {
+    title: "Request Access",
+    description: "Request access to specific modules or roles.",
+    icon: ShieldCheck,
+    roles: ["USER", "DEVELOPER"], // Developer sees all
+  },
 ];
 
 export default function Dashboard() {
   const { user, role, signOut, setRole } = useAuth();
   const navigate = useNavigate();
+  const [availableRoles, setAvailableRoles] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("t101_application_roles")
+          .select("role_name");
+
+        if (error) {
+          console.error("Error fetching roles:", error);
+          // Fallback to hardcoded roles if DB fetch fails or table doesn't exist yet
+          setAvailableRoles(["DEVELOPER", "PROGRAM_OFFICE", "STUDENT", "USER", "FACULTY", "TA", "EXAM_OFFICE", "SODOXO_OFFICE"]);
+        } else if (data) {
+          // Normalize roles to Uppercase for comparison consistency
+          const roles = data.map((r: { role_name: string }) => r.role_name.toUpperCase());
+          // Ensure basic roles are present if table is empty/partial
+          const defaultRoles = ["DEVELOPER", "USER"];
+          const mergedRoles = Array.from(new Set([...defaultRoles, ...roles]));
+          setAvailableRoles(mergedRoles);
+        }
+      } catch (err) {
+        console.error("Unexpected error fetching roles:", err);
+        setAvailableRoles(["DEVELOPER", "PROGRAM_OFFICE", "STUDENT", "USER", "FACULTY", "TA", "EXAM_OFFICE", "SODOXO_OFFICE"]);
+      }
+    };
+
+    fetchRoles();
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -72,12 +109,7 @@ export default function Dashboard() {
     user?.email?.split("@")[0] ||
     "User";
 
-  const roleLabel =
-    role === "PROGRAM_OFFICE"
-      ? "Program Office"
-      : role === "DEVELOPER"
-        ? "Developer"
-        : "User";
+  const roleLabel = role ? role.charAt(0) + role.slice(1).toLowerCase().replace(/_/g, " ") : "User";
 
   return (
     <div className="min-h-screen bg-background">
@@ -102,20 +134,17 @@ export default function Dashboard() {
               <span className="text-xs text-muted-foreground">View as:</span>
               <select
                 className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-                value={role?.toLowerCase() || ""}
+                value={role?.toUpperCase() || ""}
                 onChange={(e) => {
                   const newRole = e.target.value.toUpperCase() as AppRole;
                   setRole(newRole);
                 }}
               >
-                <option value="developer">Developer</option>
-                <option value="program_office">Program Office</option>
-                <option value="student">Student</option>
-                <option value="user">User</option>
-                <option value="faculty">Faculty</option>
-                <option value="ta">TA</option>
-                <option value="exam_office">Exam Office</option>
-                <option value="sodoxo_office">Sodoxo</option>
+                {availableRoles.map((r) => (
+                  <option key={r} value={r}>
+                    {r.charAt(0) + r.slice(1).toLowerCase().replace(/_/g, " ")}
+                  </option>
+                ))}
               </select>
             </div>
 

@@ -38,14 +38,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const mockUser: AuthUser = {
       id: "mock-user-id",
       app_metadata: {},
-      user_metadata: { full_name: "Mock Developer", email: "dev@spjimr.org" },
+      user_metadata: { full_name: "Mock User", email: "user@spjimr.org" },
       aud: "authenticated",
       created_at: new Date().toISOString(),
-      role: "DEVELOPER"
+      role: "USER"
     };
 
     setUser(mockUser);
-    setRole("DEVELOPER");
+    setRole("USER");
     // Create a mock session object
     const mockSession = {
       access_token: "mock-token",
@@ -164,14 +164,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const mockUser: AuthUser = {
       id: "mock-user-id",
       app_metadata: {},
-      user_metadata: { full_name: "Mock Developer", email: "dev@spjimr.org" },
+      user_metadata: { full_name: "Mock User", email: "user@spjimr.org" },
       aud: "authenticated",
       created_at: new Date().toISOString(),
-      role: "DEVELOPER"
+      role: "USER"
     };
 
     setUser(mockUser);
-    setRole("DEVELOPER");
+    setRole("USER");
     const mockSession = {
       access_token: "mock-token",
       refresh_token: "mock-refresh-token",
