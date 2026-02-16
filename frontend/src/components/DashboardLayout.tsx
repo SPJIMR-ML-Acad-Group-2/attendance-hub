@@ -39,20 +39,20 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
           <nav className="flex items-center gap-2">
             {role === "program_office" && (
               <>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="gap-1.5">
+                <Button variant="spjimr" size="sm" onClick={() => navigate("/")} className="gap-1.5">
                   <LayoutDashboard className="w-4 h-4" /> Dashboard
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/upload")} className="gap-1.5">
+                <Button variant="spjimr" size="sm" onClick={() => navigate("/upload")} className="gap-1.5">
                   <Upload className="w-4 h-4" /> Upload
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/students")} className="gap-1.5">
+                <Button variant="spjimr" size="sm" onClick={() => navigate("/students")} className="gap-1.5">
                   <Users className="w-4 h-4" /> Students
                 </Button>
               </>
             )}
             <div className="h-6 w-px bg-border mx-1" />
             <span className="text-sm text-muted-foreground hidden sm:inline">{user?.email}</span>
-            <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-1.5">
+            <Button variant="spjimr" size="sm" onClick={handleSignOut} className="gap-1.5">
               <LogOut className="w-4 h-4" /> Sign Out
             </Button>
           </nav>
