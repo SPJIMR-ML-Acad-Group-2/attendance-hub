@@ -140,7 +140,7 @@ export default function HomePage() {
 
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/70 backdrop-blur-md">
         <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 cursor-pointer select-none" onClick={() => navigate("/")}>
             <div className="relative flex items-center justify-center w-9 h-9">
               <img
                 src="/cc-logo-new.png"

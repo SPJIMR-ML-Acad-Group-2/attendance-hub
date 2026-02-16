@@ -128,23 +128,28 @@ export default function Dashboard() {
       <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-sm">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative flex items-center justify-center">
-              <img
-                src="/cc-logo.png"
-                alt="Classroom Companion Logo"
-                className="h-9 w-9 object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-              <div className="hidden absolute inset-0 flex items-center justify-center w-9 h-9 rounded-lg bg-primary">
-                <GraduationCap className="w-5 h-5 text-primary-foreground" />
+            <div
+              className="flex items-center gap-3 cursor-pointer select-none"
+              onClick={() => navigate("/dashboard")}
+            >
+              <div className="relative flex items-center justify-center w-9 h-9">
+                <img
+                  src="/cc-logo.png"
+                  alt="Classroom Companion Logo"
+                  className="h-9 w-9 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+                <div className="hidden absolute inset-0 flex items-center justify-center w-9 h-9 rounded-lg bg-primary">
+                  <GraduationCap className="w-5 h-5 text-primary-foreground" />
+                </div>
               </div>
+              <span className="font-display font-bold text-lg tracking-tight">
+                SPJIMR Classroom Companion
+              </span>
             </div>
-            <span className="font-display font-bold text-lg tracking-tight">
-              SPJIMR Classroom Companion
-            </span>
             <span className="hidden sm:inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
               {roleLabel}
             </span>
