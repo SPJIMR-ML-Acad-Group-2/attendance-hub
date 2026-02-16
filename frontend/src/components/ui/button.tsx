@@ -9,13 +9,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-background text-primary border border-primary hover:bg-accent hover:text-accent-foreground hover:border-accent shadow-sm",
+        default: "bg-background text-foreground border border-input hover:bg-accent hover:text-accent-foreground [&_svg]:text-primary hover:[&_svg]:text-accent-foreground shadow-sm",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground hover:border-accent",
-        secondary: "bg-secondary text-primary hover:bg-accent hover:text-accent-foreground",
-        ghost: "text-primary hover:bg-accent hover:text-accent-foreground",
+        outline: "border border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground [&_svg]:text-primary hover:[&_svg]:text-accent-foreground hover:border-accent",
+        secondary: "bg-secondary text-foreground hover:bg-accent hover:text-accent-foreground [&_svg]:text-primary hover:[&_svg]:text-accent-foreground",
+        ghost: "text-foreground hover:bg-accent hover:text-accent-foreground [&_svg]:text-primary hover:[&_svg]:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        spjimr: "text-primary hover:bg-accent hover:text-accent-foreground bg-transparent", // Kept for backward compat, same as ghost now
+        spjimr: "text-foreground hover:bg-accent hover:text-accent-foreground [&_svg]:text-primary hover:[&_svg]:text-accent-foreground bg-transparent",
       },
       size: {
         default: "h-10 px-4 py-2",
