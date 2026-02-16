@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Sparkles,
   Users,
+  LogIn,
 } from "lucide-react";
 // import { backendApiUrl } from "@/lib/backendApi";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,12 +23,12 @@ import { supabase } from "@/integrations/supabase/client";
 const pillars = [
   {
     title: "Program Office",
-    copy: "Control batches, divisions, and attendance workflows from one command center.",
+    copy: "Manage batches, divisions, and attendance workflows from one place",
     icon: Building2,
   },
   {
     title: "Students",
-    copy: "Track personal attendance in real time and stay below-risk before term milestones.",
+    copy: "Track academics in real time and stay notified before term milestones.",
     icon: GraduationCap,
   },
   {
@@ -40,8 +41,9 @@ const pillars = [
 const highlights = [
   { label: "Course Dashboards", icon: BookOpen },
   { label: "Attendance Intelligence", icon: Sparkles },
-  { label: "Secure Access Model", icon: ShieldCheck },
+  { label: "Role-Gated Access", icon: ShieldCheck },
   { label: "Audit-friendly Records", icon: CalendarCheck2 },
+  { label: "Stakeholder Views", icon: CalendarCheck2 },
 ];
 
 const metrics = [
@@ -49,6 +51,55 @@ const metrics = [
   { value: "4", label: "Stakeholder Views" },
   { value: "100%", label: "Role-Gated Access" },
 ];
+
+const LoginCard = ({ isRedirecting, handleGoogleSignIn }: { isRedirecting: boolean; handleGoogleSignIn: () => void }) => (
+  <Card className="overflow-hidden border-border/50 bg-card/85 shadow-xl">
+    <div className="h-2 bg-gradient-to-r from-primary via-primary/70 to-accent" />
+    <CardContent className="space-y-6 p-8">
+      <div className="space-y-2 text-center">
+        <h2 className="text-2xl font-bold">Secure Sign In</h2>
+        <p className="text-sm text-muted-foreground">
+          Access is restricted to institutional Google accounts and policy checks.
+        </p>
+      </div>
+
+      <Button
+        onClick={handleGoogleSignIn}
+        disabled={isRedirecting}
+        variant="outline"
+        className="h-11 w-full gap-3 text-base"
+      >
+        {isRedirecting ? (
+          <Loader2 className="h-6 w-6 animate-spin" />
+        ) : (
+          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor">
+            <path
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+              fill="#4285F4"
+            />
+            <path
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              fill="#34A853"
+            />
+            <path
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              fill="#FBBC05"
+            />
+            <path
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              fill="#EA4335"
+            />
+          </svg>
+        )}
+        {isRedirecting ? "Redirecting..." : "Continue with Google"}
+      </Button>
+
+      <p className="text-center text-xs text-muted-foreground">
+        Only <strong>@spjimr.org</strong> accounts can access the platform.
+      </p>
+    </CardContent>
+  </Card>
+);
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -90,63 +141,72 @@ export default function HomePage() {
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/70 backdrop-blur-md">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
-            <img
-              src="/spjim-logo.png"
-              alt="SPJIM logo"
-              className="h-9 w-9 rounded-lg object-cover"
-            />
+            <div className="relative flex items-center justify-center w-9 h-9">
+              <img
+                src="/cc-logo-new.png"
+                alt="Classroom Companion Logo"
+                className="h-9 w-9 object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <div className="hidden absolute inset-0 flex items-center justify-center w-9 h-9 rounded-lg bg-primary">
+                <GraduationCap className="h-5 w-5 text-primary-foreground" />
+              </div>
+            </div>
             <div>
-              <p className="font-display text-lg font-bold leading-none">SPJIMR Acad Ops</p>
-              <p className="text-xs text-muted-foreground">Attendance Hub</p>
+              <p className="text-lg font-bold leading-none">Classroom Companion</p>
+              <p className="text-xs text-muted-foreground">By SPJIMR</p>
             </div>
           </div>
           <Button
             variant="secondary"
-            className="hidden sm:inline-flex"
+            className="hidden sm:inline-flex gap-2"
             onClick={handleGoogleSignIn}
             disabled={loading}
           >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
             {loading ? "Redirecting..." : "Sign In"}
           </Button>
         </div>
       </header>
 
-      <main className="container relative z-10 py-10 sm:py-14 lg:py-20">
-        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <motion.section
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45 }}
-            className="space-y-8"
-          >
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-              <Sparkles className="h-3.5 w-3.5" />
-              Academic Operations Platform
+      <main className="container relative z-10 py-6 sm:py-10 lg:py-12">
+        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] items-start">
+
+          {/* LEFT COLUMN: Hero & Highlights (and Mobile Login) */}
+          <div className="space-y-8">
+            <motion.section
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45 }}
+              className="space-y-6"
+            >
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                <Sparkles className="h-3.5 w-3.5" />
+                AI Enabled Platform
+              </div>
+
+              <div className="space-y-4">
+                <h1 className="text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">
+                  Academic Operations
+                  <br />
+                  <span className="text-accent">Rebuilt for Clarity.</span>
+                </h1>
+                <p className="max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+                  A secure platform for SPJIMR to run end-to-end academic lifecycle management :
+                  onboarding, attendance, performance.
+                </p>
+              </div>
+            </motion.section>
+
+            {/* Login Card - Mobile Only (Hidden on LG) */}
+            <div className="lg:hidden">
+              <LoginCard isRedirecting={isRedirecting} handleGoogleSignIn={handleGoogleSignIn} />
             </div>
 
-            <div className="space-y-4">
-              <h1 className="font-display text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">
-                Attendance Operations
-                <br />
-                <span className="text-accent">Rebuilt for Clarity.</span>
-              </h1>
-              <p className="max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-                A secure platform for SPJIMR to run attendance lifecycle management end-to-end:
-                onboarding, uploads, oversight, and intervention.
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              {metrics.map((item) => (
-                <Card key={item.label} className="border-border/50 bg-card/60 backdrop-blur">
-                  <CardContent className="p-4">
-                    <p className="font-display text-2xl font-bold text-primary">{item.value}</p>
-                    <p className="text-xs text-muted-foreground">{item.label}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
+            {/* Highlights Grid */}
             <div className="grid gap-4 sm:grid-cols-2">
               {highlights.map((feature, i) => (
                 <motion.div
@@ -156,7 +216,7 @@ export default function HomePage() {
                   transition={{ delay: 0.08 * i }}
                 >
                   <Card className="h-full border-border/60 bg-card/80 transition-colors hover:border-primary/50">
-                    <CardContent className="flex items-center gap-3 p-4">
+                    <CardContent className="flex items-center gap-4 p-4">
                       <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
                         <feature.icon className="h-4 w-4" />
                       </span>
@@ -166,60 +226,21 @@ export default function HomePage() {
                 </motion.div>
               ))}
             </div>
-          </motion.section>
+          </div>
 
-          <motion.aside
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.45, delay: 0.1 }}
-            className="space-y-5"
-          >
-            <Card className="overflow-hidden border-border/50 bg-card/85 shadow-2xl">
-              <div className="h-1.5 bg-gradient-to-r from-primary via-primary/70 to-accent" />
-              <CardContent className="space-y-6 p-7">
-                <div className="space-y-2 text-center">
-                  <h2 className="font-display text-2xl font-bold">Secure Sign In</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Access is restricted to institutional Google accounts and policy checks.
-                  </p>
-                </div>
+          {/* RIGHT COLUMN: Login (Desktop) & Pillars */}
+          <div className="space-y-8">
+            {/* Login Card - Desktop Only (Hidden on Mobile) */}
+            <motion.aside
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.45, delay: 0.1 }}
+              className="hidden lg:block space-y-12"
+            >
+              <LoginCard isRedirecting={isRedirecting} handleGoogleSignIn={handleGoogleSignIn} />
+            </motion.aside>
 
-                <Button
-                  onClick={handleGoogleSignIn}
-                  disabled={isRedirecting}
-                  className="h-12 w-full gap-3 text-base"
-                >
-                  {isRedirecting ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
-                      <path
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-                        fill="#4285F4"
-                      />
-                      <path
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        fill="#34A853"
-                      />
-                      <path
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        fill="#FBBC05"
-                      />
-                      <path
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        fill="#EA4335"
-                      />
-                    </svg>
-                  )}
-                  {isRedirecting ? "Redirecting..." : "Continue with Google"}
-                </Button>
-
-                <p className="text-center text-xs text-muted-foreground">
-                  Only <strong>@spjimr.org</strong> accounts can access the platform.
-                </p>
-              </CardContent>
-            </Card>
-
+            {/* Pillars List */}
             <div className="grid gap-3">
               {pillars.map((item, i) => (
                 <motion.div
@@ -234,7 +255,7 @@ export default function HomePage() {
                         <item.icon className="h-4 w-4" />
                       </span>
                       <div className="space-y-1">
-                        <p className="font-display text-base font-semibold leading-none">{item.title}</p>
+                        <p className="text-primary font-semibold leading-none">{item.title}</p>
                         <p className="text-sm text-muted-foreground">{item.copy}</p>
                       </div>
                     </CardContent>
@@ -242,13 +263,14 @@ export default function HomePage() {
                 </motion.div>
               ))}
             </div>
-          </motion.aside>
+          </div>
+
         </div>
 
         <section className="mt-14 rounded-2xl border border-border/60 bg-card/70 p-6 backdrop-blur-md sm:p-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="font-display text-2xl font-bold">Ready to run attendance at scale?</p>
+              <p className="text-2xl font-bold">Ready to run attendance at scale?</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Sign in once. Keep the entire academic operations lifecycle in one secure flow.
               </p>

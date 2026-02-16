@@ -11,7 +11,8 @@ import {
   BarChart3,
   Settings,
   ShieldCheck,
-  Clock,
+  ArrowRight,
+  Clock
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +23,7 @@ interface Tile {
   title: string;
   description: string;
   icon: React.ElementType;
-  roles: AppRole[];
+  role: AppRole | AppRole[];
 }
 
 // Icon Mapping
@@ -33,32 +34,38 @@ const tiles: Tile[] = [
     title: "Onboard Batch",
     description: "Create and manage academic batches for incoming cohorts.",
     icon: Users,
-    roles: ["PROGRAM_OFFICE", "DEVELOPER"],
+    role: ["PROGRAM_OFFICE", "DEVELOPER"],
   },
   {
     title: "Manage Courses",
     description: "Configure courses, assign divisions, and set schedules.",
     icon: BookOpen,
-    roles: ["PROGRAM_OFFICE", "DEVELOPER"],
+    role: ["PROGRAM_OFFICE", "DEVELOPER"],
   },
   {
     title: "Attendance Hub",
     description: "Upload attendance, view reports, and flag low performers.",
     icon: BarChart3,
-    roles: ["PROGRAM_OFFICE", "DEVELOPER"],
+    role: ["PROGRAM_OFFICE", "DEVELOPER"],
   },
   {
     title: "System Settings",
     description: "Manage roles, platform configuration, and integrations.",
-    icon: Settings,
-    roles: ["DEVELOPER"],
+    icon: Users,
+    role: "PROGRAM_OFFICE",
   },
   {
     title: "Request Access",
-    description: "Request access to specific modules or roles.",
+    description: "Apply for additional permissions.",
     icon: ShieldCheck,
-    roles: ["USER", "DEVELOPER"], // Developer sees all
+    role: ["USER", "NEW_USER"], // Visible to USER and NEW_USER
   },
+  {
+    title: "Request History",
+    description: "View status of your submitted requests.",
+    icon: Clock,
+    role: ["USER", "NEW_USER"], // Visible to USER and NEW_USER
+  }
 ];
 
 export default function Dashboard() {
@@ -99,9 +106,13 @@ export default function Dashboard() {
     navigate("/");
   };
 
-  const visibleTiles = tiles.filter((t) =>
-    role ? t.roles.includes(role as AppRole) : false
-  );
+  const visibleTiles = tiles.filter((tile) => {
+    if (!role) return false;
+    if (Array.isArray(tile.role)) {
+      return tile.role.includes(role);
+    }
+    return tile.role === role;
+  });
 
   const displayName =
     user?.user_metadata?.full_name ||
@@ -117,8 +128,19 @@ export default function Dashboard() {
       <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-sm">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary">
-              <GraduationCap className="w-5 h-5 text-primary-foreground" />
+            <div className="relative flex items-center justify-center">
+              <img
+                src="/cc-logo.png"
+                alt="Classroom Companion Logo"
+                className="h-9 w-9 object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <div className="hidden absolute inset-0 flex items-center justify-center w-9 h-9 rounded-lg bg-primary">
+                <GraduationCap className="w-5 h-5 text-primary-foreground" />
+              </div>
             </div>
             <span className="font-display font-bold text-lg tracking-tight">
               SPJIMR Classroom Companion
@@ -192,16 +214,29 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08, duration: 0.35 }}
+                  onClick={() => {
+                    if (tile.title === "Request Access") {
+                      navigate("/request-access");
+                    } else if (tile.title === "Request History") {
+                      navigate("/request-history");
+                    }
+                  }}
                 >
-                  <Card className="group cursor-pointer border-border/60 hover:border-accent hover:bg-accent hover:shadow-lg transition-all duration-200 h-full">
+                  <Card className="group cursor-pointer border-border/60 hover:border-accent hover:bg-accent hover:shadow-lg transition-all duration-200 h-full relative overflow-hidden">
                     <CardContent className="p-6 space-y-3">
-                      <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-primary/10 group-hover:bg-white/20 transition-colors">
-                        <tile.icon className="w-5 h-5 text-primary group-hover:text-white transition-colors" />
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-primary/10 group-hover:bg-white/20 transition-colors">
+                          <tile.icon className="w-5 h-5 text-primary group-hover:text-white transition-colors" />
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-muted-foreground/50 group-hover:text-white transition-colors" />
                       </div>
-                      <h3 className="font-semibold font-display group-hover:text-white transition-colors">{tile.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed group-hover:text-white/90 transition-colors">
-                        {tile.description}
-                      </p>
+
+                      <div>
+                        <h3 className="font-semibold font-display group-hover:text-white transition-colors">{tile.title}</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed group-hover:text-white/90 transition-colors mt-2">
+                          {tile.description}
+                        </p>
+                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>
